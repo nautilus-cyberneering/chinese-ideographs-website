@@ -30,3 +30,17 @@ jobs:
         with:
           commit_message: "Add Base images"
           file_pattern: public/images/*.tif public/images/*.tiff
+
+      - name: Build if Base images have been added
+        if: steps.auto-commit-action.outputs.changes_detected == 'true'
+        run: |
+          npm install
+          npm run build
+
+      - name: Deploy if Base images have been added
+        if: steps.auto-commit-action.outputs.changes_detected == 'true'
+        uses: JamesIves/github-pages-deploy-action@4.1.5
+        with:
+          branch: gh-pages
+          folder: public
+
