@@ -7,7 +7,7 @@ You can see this live page here: https://Nautilus-Cyberneering.github.io/chinese
 ## Get started
 
 ```
-git clone git@github.com:Nautilus-Cyberneering/chinese-ideographs-website.git
+git clone --recurse-submodules --remote-submodules git@github.com:Nautilus-Cyberneering/chinese-ideographs-website.git
 ```
 
 Install the dependencies ...
