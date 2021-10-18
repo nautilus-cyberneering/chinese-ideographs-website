@@ -17,14 +17,17 @@ jobs:
       - name: Setup DVC
         uses: iterative/setup-dvc@v1
 
+      - name: Copy images from media library (git submodule) to this repo
+        run: git submodule update --remote
+
+      - name: Git diff
+        run: git diff
+
       - name: Pull dataset from remote
         run: cd library && dvc pull --remote azure && cd ..
         env:
           AZURE_STORAGE_ACCOUNT: ${{ secrets.AZURE_STORAGE_ACCOUNT }}
           AZURE_STORAGE_SAS_TOKEN: ${{ secrets.AZURE_STORAGE_SAS_TOKEN }}
-
-      - name: Git diff
-        run: git diff
 
       - name: Copy images from media library (git submodule) to this repo
         run: ./scripts/copy-images.sh
@@ -46,4 +49,3 @@ jobs:
         with:
           branch: gh-pages
           folder: public
-
