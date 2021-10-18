@@ -1,0 +1,26 @@
+name: Import Base images from remote media library
+
+on:
+  schedule:
+    # Every hour
+    - cron:  '0 * * * *'
+
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:  
+          submodules: 'true'
+
+      - name: Setup DVC
+        uses: iterative/setup-dvc@v1
+
+      - name: Pull dataset from remote
+        run: cd library && dvc pull --remote azure && cd ..
+        env:
+          AZURE_STORAGE_ACCOUNT: ${{ secrets.AZURE_STORAGE_ACCOUNT }}
+          AZURE_STORAGE_SAS_TOKEN: ${{ secrets.AZURE_STORAGE_SAS_TOKEN }}
+
+      - name: Git diff
+        run: git diff
