@@ -26,6 +26,9 @@ jobs:
       - name: Git diff
         run: git diff
 
+      - name: Copy images from media library (git submodule) to this repo
+        run: ./scripts/copy-images.sh
+
       - uses: stefanzweifel/git-auto-commit-action@v4
         with:
           commit_message: "Add Base images"
