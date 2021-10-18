@@ -30,7 +30,9 @@ jobs:
         run: ./scripts/copy-images.sh
 
       - name: Show added or modified Base Images
-        run: git --no-pager diff
+        run:  |
+          git status
+          git --no-pager diff
 
       - name: Check if there are new Base images
         uses: technote-space/get-diff-action@v5
