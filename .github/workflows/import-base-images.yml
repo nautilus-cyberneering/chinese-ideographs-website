@@ -17,11 +17,8 @@ jobs:
       - name: Setup DVC
         uses: iterative/setup-dvc@v1
 
-      - name: Copy images from media library (git submodule) to this repo
+      - name: Update submodule
         run: git submodule update --remote
-
-      - name: Git diff
-        run: git diff
 
       - name: Pull dataset from remote
         run: cd library && dvc pull --remote azure && cd ..
@@ -31,6 +28,9 @@ jobs:
 
       - name: Copy images from media library (git submodule) to this repo
         run: ./scripts/copy-images.sh
+
+      - name: Show added or modified Base Images
+        run: git diff
 
       - uses: stefanzweifel/git-auto-commit-action@v4
         with:
