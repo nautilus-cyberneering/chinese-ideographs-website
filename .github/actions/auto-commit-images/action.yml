@@ -6,7 +6,7 @@ inputs:
     description: "The owner and repository name. For example, octocat/Hello-World"
   repo_dir:
     description: "The git repo root dir"
-  repo-token:
+  repo_token:
     description: "The auto-generated GitHub token: https://docs.github.com/en/actions/security-guides/automatic-token-authentication#about-the-github_token-secret"
 ouputs:
   changes_detected:
