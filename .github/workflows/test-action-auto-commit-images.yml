@@ -14,4 +14,6 @@ jobs:
         id: auto-commit
         uses: ./.github/actions/auto-commit-images
         with:
+          repository: "${{ github.repository }}"
           repo_dir: "${{ github.workspace }}"
+          github_token: "${{ secrets.GITHUB_TOKEN }}"

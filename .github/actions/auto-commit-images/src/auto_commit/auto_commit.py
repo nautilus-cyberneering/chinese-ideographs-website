@@ -1,6 +1,8 @@
+import base64
 import os
 
 from git import Repo
+from github import Github
 
 from auto_commit.library_filename import LibraryFilename
 
@@ -60,9 +62,36 @@ def filter_untracked_base_images(untracked):
     return base_images
 
 
-def auto_commit(repo_dir):
+def get_new_base_images(repo_dir):
     repo = Repo(repo_dir)
-
     print_debug_info(repo_dir, repo)
+    base_image_paths = filter_untracked_base_images(repo.untracked_files)
+    return base_image_paths
 
-    print(filter_untracked_base_images(repo.untracked_files))
+
+def add_new_base_images_to_the_repo(repository, repo_dir, repo_token, base_image_paths):
+    # https://docs.github.com/en/rest/reference/repos#create-or-update-file-contents
+    # https://pygithub.readthedocs.io/en/latest/github_objects/Repository.html#github.Repository.Repository.create_file
+
+    gh = Github(repo_token)
+
+    repo = gh.get_repo(repository)
+
+    for base_image_path in base_image_paths:
+        # commit message
+        commit_message = f'Add file {base_image_path}'
+        print(commit_message)
+
+        # file content
+        image_data_binary = open(f'{repo_dir}/{base_image_path}', "rb").read()
+        content = base64.b64encode(image_data_binary)
+
+        repo.create_file(base_image_path, commit_message, content)
+
+
+def auto_commit(repository, repo_dir, repo_token):
+    base_image_paths = get_new_base_images(repo_dir)
+    print("Untracked Base images: ", base_image_paths)
+
+    add_new_base_images_to_the_repo(
+        repository, repo_dir, repo_token, base_image_paths)
