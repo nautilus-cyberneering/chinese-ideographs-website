@@ -1,0 +1,13 @@
+name: "Auto-commit images"
+description: "It creates a new signed commit for every new or updated image"
+author: "Nautilus Cyberneering GmbH"
+inputs:
+  repo_dir:
+    description: "The git repo root dir"
+ouputs:
+  changes_detected:
+    description: "True if at least one commit has been made"
+runs:
+  using: "docker"
+  image: "Dockerfile"
+
