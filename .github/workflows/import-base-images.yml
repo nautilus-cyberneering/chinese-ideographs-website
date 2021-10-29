@@ -34,12 +34,13 @@ jobs:
           git status
           git --no-pager diff
 
-      - name: Auto-commit added or modified Base images
+      - name: Auto-commit added or modified images
         id: auto-commit
-        uses: stefanzweifel/git-auto-commit-action@v4
+        uses: ./.github/actions/auto-commit-images
         with:
-          commit_message: "Add Base images"
-          file_pattern: public/images/*.tif
+          repository: "${{ github.repository }}"
+          repo_dir: "${{ github.workspace }}"
+          repo_token: "${{ secrets.GITHUB_TOKEN }}"
 
       - name: Build if Base images have been added
         if: steps.auto-commit.outputs.changes_detected == 'true'
