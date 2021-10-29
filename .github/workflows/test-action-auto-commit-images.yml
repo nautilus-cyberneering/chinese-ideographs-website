@@ -16,4 +16,4 @@ jobs:
         with:
           repository: "${{ github.repository }}"
           repo_dir: "${{ github.workspace }}"
-          github_token: "${{ secrets.GITHUB_TOKEN }}"
+          repo_token: "${{ secrets.GITHUB_TOKEN }}"
