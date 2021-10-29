@@ -1,0 +1,17 @@
+name: Test action auto-commit images
+
+on:
+  push:
+    branches: [ main, issue-* ]
+
+jobs:
+  test_auto_commit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Auto-commit added or modified images
+        id: auto-commit
+        uses: ./.github/actions/auto-commit-images
+        with:
+          repo_dir: "${{ github.workspace }}"
