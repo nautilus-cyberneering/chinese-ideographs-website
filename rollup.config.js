@@ -8,7 +8,7 @@ import fs from 'fs';
 
 const production = !process.env.ROLLUP_WATCH;
 const imageArray = fs.readdirSync("./public/images");
-const imageList = imageArray.map((item, index) => ({ id: index, filename: item }));
+const imageList = imageArray.map((item, index) => ({ id: index, filename: item })).filter(image => image.filename != '.gitkeep');
 
 function serve() {
 	let server;
