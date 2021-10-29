@@ -50,7 +50,9 @@ docker build --no-cache -t act-github-actions-auto-commit-images:latest .
 Run GitHub action locally with docker:
 ```
 docker run --rm -it \
+  --env INPUT_REPOSITORY=Nautilus-Cyberneering/chinese-ideographs-website \
   --env INPUT_REPO_DIR=/repo \
+  --env INPUT_REPO_TOKEN=XXX \
   --volume $(pwd)/src:/app \
   --volume $(pwd)/../../..:/repo \
   act-github-actions-auto-commit-images
