@@ -69,7 +69,7 @@ def get_new_base_images(repo_dir):
     return base_image_paths
 
 
-def add_new_base_images_to_the_repo(repository, repo_dir, repo_token, base_image_paths):
+def add_new_base_images_to_the_repo(repository, repo_dir, repo_token, base_image_paths, branch):
     # https://docs.github.com/en/rest/reference/repos#create-or-update-file-contents
     # https://pygithub.readthedocs.io/en/latest/github_objects/Repository.html#github.Repository.Repository.create_file
 
@@ -86,12 +86,12 @@ def add_new_base_images_to_the_repo(repository, repo_dir, repo_token, base_image
         image_data_binary = open(f'{repo_dir}/{base_image_path}', "rb").read()
         content = base64.b64encode(image_data_binary)
 
-        repo.create_file(base_image_path, commit_message, content)
+        repo.create_file(base_image_path, commit_message, content, branch)
 
 
-def auto_commit(repository, repo_dir, repo_token):
+def auto_commit(repository, repo_dir, repo_token, branch):
     base_image_paths = get_new_base_images(repo_dir)
     print("Untracked Base images: ", base_image_paths)
 
     add_new_base_images_to_the_repo(
-        repository, repo_dir, repo_token, base_image_paths)
+        repository, repo_dir, repo_token, base_image_paths, branch)

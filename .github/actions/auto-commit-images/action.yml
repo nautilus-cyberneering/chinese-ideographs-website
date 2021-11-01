@@ -8,6 +8,8 @@ inputs:
     description: "The git repo root dir"
   repo_token:
     description: "The auto-generated GitHub token: https://docs.github.com/en/actions/security-guides/automatic-token-authentication#about-the-github_token-secret"
+  branch:
+    description: "The branch where we want to add the commit"
 ouputs:
   changes_detected:
     description: "True if at least one commit has been made"
