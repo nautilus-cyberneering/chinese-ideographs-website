@@ -53,6 +53,7 @@ docker run --rm -it \
   --env INPUT_REPOSITORY=Nautilus-Cyberneering/chinese-ideographs-website \
   --env INPUT_REPO_DIR=/repo \
   --env INPUT_REPO_TOKEN=XXX \
+  --env INPUT_BRANCH=main \
   --volume $(pwd)/src:/app \
   --volume $(pwd)/../../..:/repo \
   act-github-actions-auto-commit-images
