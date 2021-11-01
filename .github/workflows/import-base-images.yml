@@ -41,6 +41,7 @@ jobs:
           repository: "${{ github.repository }}"
           repo_dir: "${{ github.workspace }}"
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
+          branch: "${{ github.head_ref }}"
 
       - name: Build if Base images have been added
         if: steps.auto-commit.outputs.changes_detected == 'true'
