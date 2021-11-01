@@ -88,7 +88,7 @@ def add_new_base_images_to_the_repo(repository, repo_dir, repo_token, base_image
         response = remote_repo.create_file(
             base_image_path, commit_message, content, branch)
 
-        commits.append(response.commit.sha)
+        commits.append(response['commit'].sha)
 
     return commits
 
@@ -135,7 +135,7 @@ def update_base_images_in_the_repo(local_repo, repository, repo_dir, repo_token,
         response = remote_repo.update_file(
             base_image_path, commit_message, base_64_content, sha, branch)
 
-        commits.append(response.commit.sha)
+        commits.append(response['commit'].sha)
 
     return commits
 
