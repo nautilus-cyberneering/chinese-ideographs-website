@@ -60,13 +60,13 @@ jobs:
           echo "Output var 'changes_detected': ${{ steps.auto-commit.outputs.changes_detected }}"          
 
       - name: Build if Base images have been added
-        if: steps.auto-commit.outputs.changes_detected == 'true'
+        if: ${{ steps.auto-commit.outputs.changes_detected == 'true' }}
         run: |
           npm install
           npm run build
 
       - name: Deploy if Base images have been added
-        if: steps.auto-commit.outputs.changes_detected == 'true'
+        if: ${{ steps.auto-commit.outputs.changes_detected == 'true' }}
         uses: JamesIves/github-pages-deploy-action@4.1.5
         with:
           branch: gh-pages
