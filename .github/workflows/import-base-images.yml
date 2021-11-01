@@ -55,6 +55,13 @@ jobs:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
           branch: "${{ github.ref }}"
 
+      - name: Archive images
+        uses: actions/upload-artifact@v2
+        if: ${{ !env.ACT }}
+        with:
+          name: public-images
+          path: public/images
+
       - name: Debug auto-commit ouput
         run: |
           echo "Output var 'changes_detected': ${{ steps.auto-commit.outputs.changes_detected }}"          
