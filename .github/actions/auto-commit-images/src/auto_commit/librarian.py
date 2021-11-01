@@ -1,3 +1,5 @@
+import os
+
 from enum import Enum
 
 
@@ -36,3 +38,15 @@ class LibraryFilename():
 
     def is_base_image(self):
         return self.purpose_code is PurposeCode.BASE_IMAGE
+
+
+def filter_media_library_files(filepaths):
+    images = list(filter(lambda filepath: LibraryFilename.validate(
+        os.path.basename(filepath)), filepaths))
+    return images
+
+
+def filter_base_images(filepaths):
+    base_images = list(filter(lambda filepath: LibraryFilename(
+        os.path.basename(filepath)).is_base_image(), filepaths))
+    return base_images
