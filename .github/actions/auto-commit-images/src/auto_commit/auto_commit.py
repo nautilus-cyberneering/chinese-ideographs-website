@@ -7,6 +7,11 @@ from github import Github
 from auto_commit.librarian import LibraryFilename, filter_media_library_files, filter_base_images
 
 
+class FileNotFoundInRepoException(Exception):
+    """Raised when we try to get the sha of a non-existing file file"""
+    pass
+
+
 def print_repo_dir(repo_dir):
     print("repo: ", repo_dir)
 
@@ -88,7 +93,23 @@ def add_new_base_images_to_the_repo(repository, repo_dir, repo_token, base_image
     return commits
 
 
-def update_base_images_in_the_repo(repository, repo_dir, repo_token, base_image_paths, branch):
+def get_previous_file_sha(remote_repo, file_path, branch):
+    # GitHub API does not allow to download files bigger than 1MB and there is not any API endpoint to get the current sha of a file.
+    # The simplest solution is to get the sha from a get_contents endpoint using a directory. The endpoint returns the sha of the file.
+    # for every file in the direectory.
+    dirname = os.path.dirname(file_path)
+
+    dir_content = remote_repo.get_contents(dirname, branch)
+
+    for file in dir_content:
+        if (file.path == file_path):
+            return file.sha
+
+    raise FileNotFoundInRepoException(
+        f'Error: trying to get sha for missing file {file_path} in branch {branch}')
+
+
+def update_base_images_in_the_repo(local_repo, repository, repo_dir, repo_token, base_image_paths, branch):
     # https://docs.github.com/en/rest/reference/repos#create-or-update-file-contents
     # https://pygithub.readthedocs.io/en/latest/github_objects/Repository.html#github.Repository.Repository.update_file
 
@@ -107,12 +128,12 @@ def update_base_images_in_the_repo(repository, repo_dir, repo_token, base_image_
 
         # File content
         image_data_binary = open(file_path, "rb").read()
-        content = base64.b64encode(image_data_binary)
+        base_64_content = base64.encodebytes(image_data_binary)
 
-        contents = remote_repo.get_contents(file_path, branch)
+        sha = get_previous_file_sha(remote_repo, base_image_path, branch)
 
         response = remote_repo.update_file(
-            base_image_path, commit_message, content, contents.sha, branch)
+            base_image_path, commit_message, base_64_content, sha, branch)
 
         commits.append(response.commit.sha)
 
@@ -132,8 +153,8 @@ def auto_commit(repository, repo_dir, repo_token, branch):
 
     # Modified Base images
     modifed_base_image_paths = get_modified_base_images(local_repo)
-    print("Modified Base images: ", new_base_image_paths)
+    print("Modified Base images: ", modifed_base_image_paths)
     commits_for_updates = update_base_images_in_the_repo(
-        repository, repo_dir, repo_token, modifed_base_image_paths, branch)
+        local_repo, repository, repo_dir, repo_token, modifed_base_image_paths, branch)
 
     return commits_new_images + commits_for_updates
