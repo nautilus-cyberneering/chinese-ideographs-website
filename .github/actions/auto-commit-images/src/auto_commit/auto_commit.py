@@ -128,15 +128,25 @@ def update_base_images_in_the_repo(local_repo, repository, repo_dir, repo_token,
         print(f'Updating file {file_path}')
 
         # File content
-        image_data_binary = open(file_path, "rb").read()
-        base_64_content = base64.encodebytes(image_data_binary)
+        image_data = open(file_path, "rb").read()
 
+        # Previous sha for the file
         sha = get_previous_file_sha(remote_repo, base_image_path, branch)
 
+        # Debug info
+        print("Auto-commit to update image: ")
+        print("Base image path: ", base_image_path)
+        print("Commitmessage", commit_message)
+        print("Previous file sha: ", sha)
+        print("Branch: ", branch)
+
+        # Upload new file version
         response = remote_repo.update_file(
-            base_image_path, commit_message, base_64_content, sha, branch)
+            base_image_path, commit_message, image_data, sha, branch)
 
         commits.append(response['commit'].sha)
+
+        print("Commt sha: ", response['commit'].sha)
 
     return commits
 
