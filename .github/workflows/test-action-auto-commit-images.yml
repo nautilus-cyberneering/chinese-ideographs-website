@@ -17,4 +17,4 @@ jobs:
           repository: "${{ github.repository }}"
           repo_dir: "${{ github.workspace }}"
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
-          branch: "${{ github.head_ref }}"
+          branch: "${{ github.ref }}"
