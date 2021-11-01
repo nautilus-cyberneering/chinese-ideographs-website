@@ -4,7 +4,7 @@ import os
 from git import Repo
 from github import Github
 
-from auto_commit.library_filename import LibraryFilename
+from auto_commit.librarian import LibraryFilename, filter_media_library_files, filter_base_images
 
 
 def print_repo_dir(repo_dir):
@@ -44,29 +44,21 @@ def print_debug_info(repo_dir, repo):
     print_git_diff(repo)
 
 
-def filter_media_library_files(filepaths):
-    images = list(filter(lambda filepath: LibraryFilename.validate(
-        os.path.basename(filepath)), filepaths))
-    return images
+def get_all_modified_files(repo):
+    all_modified_files = []
+    for diff_modified in repo.index.diff(None).iter_change_type('M'):
+        all_modified_files.append(diff_modified.a_path)
+    return all_modified_files
 
 
-def filter_base_images(filepaths):
-    base_images = list(filter(lambda filepath: LibraryFilename(
-        os.path.basename(filepath)).is_base_image(), filepaths))
-    return base_images
+def get_new_base_images(repo):
+    all_untracked_files = repo.untracked_files
+    return filter_base_images(filter_media_library_files(all_untracked_files))
 
 
-def filter_untracked_base_images(untracked):
-    media_library_files = filter_media_library_files(untracked)
-    base_images = filter_base_images(media_library_files)
-    return base_images
-
-
-def get_new_base_images(repo_dir):
-    repo = Repo(repo_dir)
-    print_debug_info(repo_dir, repo)
-    base_image_paths = filter_untracked_base_images(repo.untracked_files)
-    return base_image_paths
+def get_modified_base_images(repo):
+    all_modified_files = get_all_modified_files(repo)
+    return filter_base_images(filter_media_library_files(all_modified_files))
 
 
 def add_new_base_images_to_the_repo(repository, repo_dir, repo_token, base_image_paths, branch):
@@ -75,20 +67,20 @@ def add_new_base_images_to_the_repo(repository, repo_dir, repo_token, base_image
 
     gh = Github(repo_token)
 
-    repo = gh.get_repo(repository)
+    remote_repo = gh.get_repo(repository)
 
     commits = []
 
     for base_image_path in base_image_paths:
-        # commit message
+        # Commit message
         commit_message = f'Add file {base_image_path}'
         print(commit_message)
 
-        # file content
+        # File content
         image_data_binary = open(f'{repo_dir}/{base_image_path}', "rb").read()
         content = base64.b64encode(image_data_binary)
 
-        response = repo.create_file(
+        response = remote_repo.create_file(
             base_image_path, commit_message, content, branch)
 
         commits.append(response.commit.sha)
@@ -96,11 +88,52 @@ def add_new_base_images_to_the_repo(repository, repo_dir, repo_token, base_image
     return commits
 
 
-def auto_commit(repository, repo_dir, repo_token, branch):
-    base_image_paths = get_new_base_images(repo_dir)
-    print("Untracked Base images: ", base_image_paths)
+def update_base_images_in_the_repo(repository, repo_dir, repo_token, base_image_paths, branch):
+    # https://docs.github.com/en/rest/reference/repos#create-or-update-file-contents
+    # https://pygithub.readthedocs.io/en/latest/github_objects/Repository.html#github.Repository.Repository.update_file
 
-    commits = add_new_base_images_to_the_repo(
-        repository, repo_dir, repo_token, base_image_paths, branch)
+    gh = Github(repo_token)
+
+    remote_repo = gh.get_repo(repository)
+
+    commits = []
+
+    for base_image_path in base_image_paths:
+        # Commit message
+        commit_message = f'Update file {base_image_path}'
+        print(commit_message)
+
+        file_path = f'{repo_dir}/{base_image_path}'
+
+        # File content
+        image_data_binary = open(file_path, "rb").read()
+        content = base64.b64encode(image_data_binary)
+
+        contents = remote_repo.get_contents(file_path, branch)
+
+        response = remote_repo.update_file(
+            base_image_path, commit_message, content, contents.sha, branch)
+
+        commits.append(response.commit.sha)
 
     return commits
+
+
+def auto_commit(repository, repo_dir, repo_token, branch):
+    local_repo = Repo(repo_dir)
+
+    print_debug_info(repo_dir, local_repo)
+
+    # New Base images
+    new_base_image_paths = get_new_base_images(local_repo)
+    print("New Base images: ", new_base_image_paths)
+    commits_new_images = add_new_base_images_to_the_repo(
+        repository, repo_dir, repo_token, new_base_image_paths, branch)
+
+    # Modified Base images
+    modifed_base_image_paths = get_modified_base_images(local_repo)
+    print("Modified Base images: ", new_base_image_paths)
+    commits_for_updates = update_base_images_in_the_repo(
+        repository, repo_dir, repo_token, modifed_base_image_paths, branch)
+
+    return commits_new_images + commits_for_updates
