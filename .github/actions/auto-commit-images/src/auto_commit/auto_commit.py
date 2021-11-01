@@ -77,6 +77,8 @@ def add_new_base_images_to_the_repo(repository, repo_dir, repo_token, base_image
 
     repo = gh.get_repo(repository)
 
+    commits = []
+
     for base_image_path in base_image_paths:
         # commit message
         commit_message = f'Add file {base_image_path}'
@@ -86,12 +88,19 @@ def add_new_base_images_to_the_repo(repository, repo_dir, repo_token, base_image
         image_data_binary = open(f'{repo_dir}/{base_image_path}', "rb").read()
         content = base64.b64encode(image_data_binary)
 
-        repo.create_file(base_image_path, commit_message, content, branch)
+        response = repo.create_file(
+            base_image_path, commit_message, content, branch)
+
+        commits.append(response.commit.sha)
+
+    return commits
 
 
 def auto_commit(repository, repo_dir, repo_token, branch):
     base_image_paths = get_new_base_images(repo_dir)
     print("Untracked Base images: ", base_image_paths)
 
-    add_new_base_images_to_the_repo(
+    commits = add_new_base_images_to_the_repo(
         repository, repo_dir, repo_token, base_image_paths, branch)
+
+    return commits
