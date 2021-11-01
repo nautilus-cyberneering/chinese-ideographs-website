@@ -18,3 +18,7 @@ jobs:
           repo_dir: "${{ github.workspace }}"
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
           branch: "${{ github.ref }}"
+
+      - name: Debug ouput
+        run: |
+          echo "Output var 'changes_detected': ${{ steps.auto-commit.outputs.changes_detected }}"
