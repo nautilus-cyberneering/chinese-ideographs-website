@@ -16,4 +16,4 @@ if __name__ == "__main__":
     repo_dir = os.environ["INPUT_REPO_DIR"]
     repo_token = os.environ["INPUT_REPO_TOKEN"]
     branch = os.environ["INPUT_BRANCH"]
-    main(repository, repo_dir, repo_token)
+    main(repository, repo_dir, repo_token, branch)
