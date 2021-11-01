@@ -55,6 +55,10 @@ jobs:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
           branch: "${{ github.ref }}"
 
+      - name: Debug auto-commit ouput
+        run: |
+          echo "Output var 'changes_detected': ${{ steps.auto-commit.outputs.changes_detected }}"          
+
       - name: Build if Base images have been added
         if: steps.auto-commit.outputs.changes_detected == 'true'
         run: |

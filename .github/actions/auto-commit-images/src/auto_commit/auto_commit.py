@@ -122,9 +122,10 @@ def update_base_images_in_the_repo(local_repo, repository, repo_dir, repo_token,
     for base_image_path in base_image_paths:
         # Commit message
         commit_message = f'Update file {base_image_path}'
-        print(commit_message)
 
         file_path = f'{repo_dir}/{base_image_path}'
+
+        print(f'Updating file {file_path}')
 
         # File content
         image_data_binary = open(file_path, "rb").read()
