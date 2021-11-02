@@ -29,10 +29,18 @@ jobs:
       - name: Setup DVC
         uses: iterative/setup-dvc@v1
 
-      - name: Update submodule
+      - name: Update library submodule
+        id: update-library
         run: |
           git submodule status
+          echo "::set-output name=previous_ref::$(git submodule status | awk '{print $1}')"
           git submodule update --remote
+          echo "::set-output name=current_ref::$(git submodule status | awk '{print $1}')"
+
+      - name: Debug update submodule ouput
+        run: |
+          echo "Output var 'previous_ref': ${{ steps.update-library.outputs.previous_ref }}"
+          echo "Output var 'current_ref': ${{ steps.update-library.outputs.current_ref }}"
 
       - name: Pull dataset from remote
         run: cd library && dvc pull --remote azure && cd ..
