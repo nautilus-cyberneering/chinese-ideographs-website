@@ -56,6 +56,13 @@ def get_all_modified_files(repo):
     return all_modified_files
 
 
+def get_all_deleted_files(repo):
+    all_deleted_files = []
+    for diff_deleted in repo.index.diff(None).iter_change_type('D'):
+        all_deleted_files.append(diff_deleted.a_path)
+    return all_deleted_files
+
+
 def get_new_base_images(repo):
     all_untracked_files = repo.untracked_files
     return filter_base_images(filter_media_library_files(all_untracked_files))
@@ -64,6 +71,11 @@ def get_new_base_images(repo):
 def get_modified_base_images(repo):
     all_modified_files = get_all_modified_files(repo)
     return filter_base_images(filter_media_library_files(all_modified_files))
+
+
+def get_deleted_base_images(repo):
+    all_deleted_files = get_all_deleted_files(repo)
+    return filter_base_images(filter_media_library_files(all_deleted_files))
 
 
 def add_new_base_images_to_the_repo(repository, repo_dir, repo_token, base_image_paths, branch):
@@ -83,6 +95,12 @@ def add_new_base_images_to_the_repo(repository, repo_dir, repo_token, base_image
 
         # File content
         image_data = open(f'{repo_dir}/{base_image_path}', "rb").read()
+
+        # Debug info
+        print("Auto-commit to add image: ")
+        print("Base image path: ", base_image_path)
+        print("Commit message", commit_message)
+        print("Branch: ", branch)
 
         response = remote_repo.create_file(
             base_image_path, commit_message, image_data, branch)
@@ -135,7 +153,7 @@ def update_base_images_in_the_repo(local_repo, repository, repo_dir, repo_token,
         # Debug info
         print("Auto-commit to update image: ")
         print("Base image path: ", base_image_path)
-        print("Commitmessage", commit_message)
+        print("Commit message", commit_message)
         print("Previous file sha: ", sha)
         print("Branch: ", branch)
 
@@ -150,21 +168,66 @@ def update_base_images_in_the_repo(local_repo, repository, repo_dir, repo_token,
     return commits
 
 
+def delete_base_images_from_the_repo(local_repo, repository, repo_dir, repo_token, base_image_paths, branch):
+    # https://docs.github.com/en/rest/reference/repos#delete-a-file
+    # https://pygithub.readthedocs.io/en/latest/github_objects/Repository.html#github.Repository.Repository.delete_file
+
+    gh = Github(repo_token)
+
+    remote_repo = gh.get_repo(repository)
+
+    commits = []
+
+    for base_image_path in base_image_paths:
+        # Commit message
+        commit_message = f'Delete file {base_image_path}'
+
+        file_path = f'{repo_dir}/{base_image_path}'
+
+        print(f'Deleting file {file_path}')
+
+        # Previous sha for the file
+        sha = get_previous_file_sha(remote_repo, base_image_path, branch)
+
+        # Debug info
+        print("Auto-commit to delete image: ")
+        print("Base image path: ", base_image_path)
+        print("Commit message", commit_message)
+        print("Previous file sha: ", sha)
+        print("Branch: ", branch)
+
+        # Upload new file version
+        response = remote_repo.delete_file(
+            base_image_path, commit_message, sha, branch)
+
+        commits.append(response['commit'].sha)
+
+        print("Commt sha: ", response['commit'].sha)
+
+    return commits
+
+
 def auto_commit(repository, repo_dir, repo_token, branch):
     local_repo = Repo(repo_dir)
 
     print_debug_info(repo_dir, local_repo)
 
     # New Base images
-    new_base_image_paths = get_new_base_images(local_repo)
-    print("New Base images: ", new_base_image_paths)
-    commits_new_images = add_new_base_images_to_the_repo(
-        repository, repo_dir, repo_token, new_base_image_paths, branch)
+    added_base_image_paths = get_new_base_images(local_repo)
+    print("Added Base images: ", added_base_image_paths)
+    commits_for_added_images = add_new_base_images_to_the_repo(
+        repository, repo_dir, repo_token, added_base_image_paths, branch)
 
     # Modified Base images
-    modifed_base_image_paths = get_modified_base_images(local_repo)
-    print("Modified Base images: ", modifed_base_image_paths)
-    commits_for_updates = update_base_images_in_the_repo(
-        local_repo, repository, repo_dir, repo_token, modifed_base_image_paths, branch)
+    modified_base_image_paths = get_modified_base_images(local_repo)
+    print("Modified Base images: ", modified_base_image_paths)
+    commits_for_updated_images = update_base_images_in_the_repo(
+        local_repo, repository, repo_dir, repo_token, modified_base_image_paths, branch)
 
-    return commits_new_images + commits_for_updates
+    # Deleted Base images
+    deleted_base_image_paths = get_deleted_base_images(local_repo)
+    print("Deleted Base images: ", deleted_base_image_paths)
+    commits_for_deleted_images = delete_base_images_from_the_repo(
+        local_repo, repository, repo_dir, repo_token, deleted_base_image_paths, branch)
+
+    return commits_for_added_images + commits_for_updated_images + commits_for_deleted_images
