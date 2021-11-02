@@ -22,5 +22,5 @@ if [[ $ERROR =~ "ERROR: unexpected error - 'not in cache'" ]]; then
    DIFF='{"added": [], "deleted": [], "modified": [], "renamed": [], "not in cache": []}'
 fi
 
-echo "::set-output name=diff::$DIFF"
+echo "::set-output name=dvc-diff::$DIFF"
 echo "DIFF: $DIFF"
