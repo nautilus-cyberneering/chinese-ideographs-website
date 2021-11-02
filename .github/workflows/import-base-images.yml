@@ -39,15 +39,11 @@ jobs:
 
       - name: Dvc diff for library
         id: library-dvc-diff
-        run: |
-          cd library
-          DIFF=$(dvc diff --show-json ${{ steps.update-library.outputs.previous_ref }} ${{ steps.update-library.outputs.current_ref }})
-          echo $DIFF
-          echo "::set-output name=dvc-diff::${DIFF}"
-          cd ..
+        run: ./scripts/library-dvc-diff.sh
         env:
-          AZURE_STORAGE_ACCOUNT: ${{ secrets.AZURE_STORAGE_ACCOUNT }}
-          AZURE_STORAGE_SAS_TOKEN: ${{ secrets.AZURE_STORAGE_SAS_TOKEN }}
+          DVC_REPO_DIR: "library"
+          PREVIOUS_REF: ${{ steps.update-library.outputs.previous_ref }}
+          CURRENT_REF: ${{ steps.update-library.outputs.current_ref }}
 
       - name: Debug update submodule
         run: |
