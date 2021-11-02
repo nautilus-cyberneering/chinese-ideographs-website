@@ -30,7 +30,9 @@ jobs:
         uses: iterative/setup-dvc@v1
 
       - name: Update submodule
-        run: git submodule update --remote
+        run: |
+          git submodule status
+          git submodule update --remote
 
       - name: Pull dataset from remote
         run: cd library && dvc pull --remote azure && cd ..
