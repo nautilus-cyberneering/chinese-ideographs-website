@@ -33,9 +33,9 @@ jobs:
         id: update-library
         run: |
           git submodule status
-          echo "::set-output name=previous_ref::$(git submodule status | awk '{print $1}')"
+          echo "::set-output name=previous_ref::$(git submodule status | awk '{print $1}' | sed 's/-//' | sed 's/+//' | sed 's/U//')"
           git submodule update --remote
-          echo "::set-output name=current_ref::$(git submodule status | awk '{print $1}')"
+          echo "::set-output name=current_ref::$(git submodule status | awk '{print $1}' | sed 's/-//' | sed 's/+//' | sed 's/U//')"
 
       - name: Dvc diff for library
         id: library-dvc-diff
@@ -80,7 +80,7 @@ jobs:
           git config --global user.name 'github-actions[bot]'
           git config --global user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}
-          git commit -am "Auto update library submodule" && git push || echo "No changes to commit"
+          git pull && git commit -am "Auto update library submodule" && git push || echo "No changes to commit"
 
       - name: Archive images
         uses: actions/upload-artifact@v2
