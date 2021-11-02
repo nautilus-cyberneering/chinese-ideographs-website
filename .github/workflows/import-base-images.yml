@@ -49,7 +49,7 @@ jobs:
           AZURE_STORAGE_SAS_TOKEN: ${{ secrets.AZURE_STORAGE_SAS_TOKEN }}
 
       - name: Copy images from media library (git submodule) to this repo
-        run: ./scripts/copy-images.sh
+        run: ./scripts/sync-base-images.sh
 
       - name: Show added or modified Base Images
         run:  |
