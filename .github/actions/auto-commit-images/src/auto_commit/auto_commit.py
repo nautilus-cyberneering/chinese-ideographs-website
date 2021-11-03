@@ -83,7 +83,7 @@ def file_exists_in_branch_and_has_the_same_content(local_repo, remote_repo, repo
     local_sha = local_repo.git.hash_object(repo_file_path)
 
     # Debug info
-    print("CHeck file sha: ")
+    print("Checking file sha ...")
     print("Repo file path: ", repo_file_path)
     print("Remote sha: ", remote_sha)
     print("Local sha: ", local_sha)
@@ -117,7 +117,7 @@ def add_new_base_images_to_the_repo(local_repo, repository, repo_dir, repo_token
         print("File path: ", file_path)
         print("Repo dir: ", repo_dir)
         print("Repo Base image path: ", repo_base_image_path)
-        print("Commit message", commit_message)
+        print("Commit message: ", commit_message)
         print("Branch: ", branch)
 
         if (file_exists_in_branch_and_has_the_same_content(local_repo, remote_repo, repo_base_image_path, branch)):
@@ -126,9 +126,10 @@ def add_new_base_images_to_the_repo(local_repo, repository, repo_dir, repo_token
 
         # File content
         image_data = open(file_path, "rb").read()
+        image_data_base_64 = base64.b64encode(image_data)
 
         response = remote_repo.create_file(
-            repo_base_image_path, commit_message, image_data, branch)
+            repo_base_image_path, commit_message, image_data_base_64, branch)
 
         commits.append(response['commit'].sha)
 
@@ -190,7 +191,7 @@ def update_base_images_in_the_repo(local_repo, repository, repo_dir, repo_token,
         print("File path: ", file_path)
         print("Repo dir: ", repo_dir)
         print("Repo Base image path: ", repo_base_image_path)
-        print("Commit message", commit_message)
+        print("Commit message: ", commit_message)
         print("Previous file sha: ", sha)
         print("Branch: ", branch)
 
@@ -229,7 +230,7 @@ def delete_base_images_from_the_repo(local_repo, repository, repo_dir, repo_toke
         print("File path: ", file_path)
         print("Repo dir: ", repo_dir)
         print("Repo Base image path: ", repo_base_image_path)
-        print("Commit message", commit_message)
+        print("Commit message: ", commit_message)
         print("Previous file sha: ", sha)
         print("Branch: ", branch)
 
