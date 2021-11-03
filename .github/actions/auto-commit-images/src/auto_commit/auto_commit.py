@@ -78,7 +78,24 @@ def get_deleted_base_images(repo):
     return filter_base_images(filter_media_library_files(all_deleted_files))
 
 
-def add_new_base_images_to_the_repo(repository, repo_dir, repo_token, base_image_paths, branch):
+def file_exists_in_branch_and_has_the_same_content(local_repo, remote_repo, repo_file_path, branch):
+    remote_sha = file_exists_in_branch(remote_repo, repo_file_path, branch)
+    local_sha = local_repo.git.hash_object(repo_file_path)
+
+    # Debug info
+    print("CHeck file sha: ")
+    print("Repo file path: ", repo_file_path)
+    print("Remote sha: ", remote_sha)
+    print("Local sha: ", local_sha)
+
+    file_already_commited_in_branch = False
+    if (local_sha == remote_sha):
+        file_already_commited_in_branch = True
+
+    return file_already_commited_in_branch
+
+
+def add_new_base_images_to_the_repo(local_repo, repository, repo_dir, repo_token, repo_base_image_paths, branch):
     # https://docs.github.com/en/rest/reference/repos#create-or-update-file-contents
     # https://pygithub.readthedocs.io/en/latest/github_objects/Repository.html#github.Repository.Repository.create_file
 
@@ -88,45 +105,65 @@ def add_new_base_images_to_the_repo(repository, repo_dir, repo_token, base_image
 
     commits = []
 
-    for base_image_path in base_image_paths:
-        # Commit message
-        commit_message = f'Add file {base_image_path}'
-        print(commit_message)
+    for repo_base_image_path in repo_base_image_paths:
 
-        # File content
-        image_data = open(f'{repo_dir}/{base_image_path}', "rb").read()
+        file_path = f'{repo_dir}/{repo_base_image_path}'
+
+        # Commit message
+        commit_message = f'Add file {repo_base_image_path}'
 
         # Debug info
         print("Auto-commit to add image: ")
-        print("Base image path: ", base_image_path)
+        print("File path: ", file_path)
+        print("Repo dir: ", repo_dir)
+        print("Repo Base image path: ", repo_base_image_path)
         print("Commit message", commit_message)
         print("Branch: ", branch)
 
+        if (file_exists_in_branch_and_has_the_same_content(local_repo, remote_repo, repo_base_image_path, branch)):
+            # Skip commit if the file with the same content already exist in the branch
+            continue
+
+        # File content
+        image_data = open(file_path, "rb").read()
+
         response = remote_repo.create_file(
-            base_image_path, commit_message, image_data, branch)
+            repo_base_image_path, commit_message, image_data, branch)
 
         commits.append(response['commit'].sha)
 
     return commits
 
 
-def get_file_sha(remote_repo, file_path, branch):
+def get_file_sha(remote_repo, repo_file_path, branch):
     # GitHub API does not allow to download files bigger than 1MB and there is not any API endpoint to get the current sha of a file.
     # The simplest solution is to get the sha from a get_contents endpoint using a directory. The endpoint returns the sha of the file.
     # for every file in the direectory.
-    dirname = os.path.dirname(file_path)
+    dirname = os.path.dirname(repo_file_path)
 
     dir_content = remote_repo.get_contents(dirname, branch)
 
     for file in dir_content:
-        if (file.path == file_path):
+        if (file.path == repo_file_path):
             return file.sha
 
     raise FileNotFoundInRepoException(
-        f'Error: trying to get sha for missing file {file_path} in branch {branch}')
+        f'Error: trying to get sha for missing file {repo_file_path} in branch {branch}')
 
 
-def update_base_images_in_the_repo(local_repo, repository, repo_dir, repo_token, base_image_paths, branch):
+def file_exists_in_branch(remote_repo, repo_file_path, branch):
+    dirname = os.path.dirname(repo_file_path)
+
+    dir_content = remote_repo.get_contents(dirname, branch)
+
+    for file in dir_content:
+        if (file.path == repo_file_path):
+            return file.sha
+
+    return None
+
+
+def update_base_images_in_the_repo(local_repo, repository, repo_dir, repo_token, repo_base_image_paths, branch):
     # https://docs.github.com/en/rest/reference/repos#create-or-update-file-contents
     # https://pygithub.readthedocs.io/en/latest/github_objects/Repository.html#github.Repository.Repository.update_file
 
@@ -136,30 +173,30 @@ def update_base_images_in_the_repo(local_repo, repository, repo_dir, repo_token,
 
     commits = []
 
-    for base_image_path in base_image_paths:
+    for repo_base_image_path in repo_base_image_paths:
         # Commit message
-        commit_message = f'Update file {base_image_path}'
+        commit_message = f'Update file {repo_base_image_path}'
 
-        file_path = f'{repo_dir}/{base_image_path}'
-
-        print(f'Updating file {file_path}')
+        file_path = f'{repo_dir}/{repo_base_image_path}'
 
         # File content
         image_data = open(file_path, "rb").read()
 
         # Previous sha for the file
-        sha = get_file_sha(remote_repo, base_image_path, branch)
+        sha = get_file_sha(remote_repo, repo_base_image_path, branch)
 
         # Debug info
         print("Auto-commit to update image: ")
-        print("Base image path: ", base_image_path)
+        print("File path: ", file_path)
+        print("Repo dir: ", repo_dir)
+        print("Repo Base image path: ", repo_base_image_path)
         print("Commit message", commit_message)
         print("Previous file sha: ", sha)
         print("Branch: ", branch)
 
         # Upload new file version
         response = remote_repo.update_file(
-            base_image_path, commit_message, image_data, sha, branch)
+            repo_base_image_path, commit_message, image_data, sha, branch)
 
         commits.append(response['commit'].sha)
 
@@ -168,7 +205,7 @@ def update_base_images_in_the_repo(local_repo, repository, repo_dir, repo_token,
     return commits
 
 
-def delete_base_images_from_the_repo(local_repo, repository, repo_dir, repo_token, base_image_paths, branch):
+def delete_base_images_from_the_repo(local_repo, repository, repo_dir, repo_token, repo_base_image_paths, branch):
     # https://docs.github.com/en/rest/reference/repos#delete-a-file
     # https://pygithub.readthedocs.io/en/latest/github_objects/Repository.html#github.Repository.Repository.delete_file
 
@@ -178,27 +215,27 @@ def delete_base_images_from_the_repo(local_repo, repository, repo_dir, repo_toke
 
     commits = []
 
-    for base_image_path in base_image_paths:
+    for repo_base_image_path in repo_base_image_paths:
         # Commit message
-        commit_message = f'Delete file {base_image_path}'
+        commit_message = f'Delete file {repo_base_image_path}'
 
-        file_path = f'{repo_dir}/{base_image_path}'
-
-        print(f'Deleting file {file_path}')
+        file_path = f'{repo_dir}/{repo_base_image_path}'
 
         # Previous sha for the file
-        sha = get_file_sha(remote_repo, base_image_path, branch)
+        sha = get_file_sha(remote_repo, repo_base_image_path, branch)
 
         # Debug info
         print("Auto-commit to delete image: ")
-        print("Base image path: ", base_image_path)
+        print("File path: ", file_path)
+        print("Repo dir: ", repo_dir)
+        print("Repo Base image path: ", repo_base_image_path)
         print("Commit message", commit_message)
         print("Previous file sha: ", sha)
         print("Branch: ", branch)
 
         # Upload new file version
         response = remote_repo.delete_file(
-            base_image_path, commit_message, sha, branch)
+            repo_base_image_path, commit_message, sha, branch)
 
         commits.append(response['commit'].sha)
 
@@ -213,21 +250,21 @@ def auto_commit(repository, repo_dir, repo_token, branch):
     print_debug_info(repo_dir, local_repo)
 
     # New Base images
-    added_base_image_paths = get_new_base_images(local_repo)
-    print("Added Base images: ", added_base_image_paths)
+    added_repo_base_image_paths = get_new_base_images(local_repo)
+    print("Added Base images: ", added_repo_base_image_paths)
     commits_for_added_images = add_new_base_images_to_the_repo(
-        repository, repo_dir, repo_token, added_base_image_paths, branch)
+        local_repo, repository, repo_dir, repo_token, added_repo_base_image_paths, branch)
 
     # Modified Base images
-    modified_base_image_paths = get_modified_base_images(local_repo)
-    print("Modified Base images: ", modified_base_image_paths)
+    modified_repo_base_image_paths = get_modified_base_images(local_repo)
+    print("Modified Base images: ", modified_repo_base_image_paths)
     commits_for_updated_images = update_base_images_in_the_repo(
-        local_repo, repository, repo_dir, repo_token, modified_base_image_paths, branch)
+        local_repo, repository, repo_dir, repo_token, modified_repo_base_image_paths, branch)
 
     # Deleted Base images
-    deleted_base_image_paths = get_deleted_base_images(local_repo)
-    print("Deleted Base images: ", deleted_base_image_paths)
+    deleted_repo_base_image_paths = get_deleted_base_images(local_repo)
+    print("Deleted Base images: ", deleted_repo_base_image_paths)
     commits_for_deleted_images = delete_base_images_from_the_repo(
-        local_repo, repository, repo_dir, repo_token, deleted_base_image_paths, branch)
+        local_repo, repository, repo_dir, repo_token, deleted_repo_base_image_paths, branch)
 
     return commits_for_added_images + commits_for_updated_images + commits_for_deleted_images
