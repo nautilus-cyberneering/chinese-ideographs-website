@@ -126,10 +126,9 @@ def add_new_base_images_to_the_repo(local_repo, repository, repo_dir, repo_token
 
         # File content
         image_data = open(file_path, "rb").read()
-        image_data_base_64 = base64.b64encode(image_data)
 
         response = remote_repo.create_file(
-            repo_base_image_path, commit_message, image_data_base_64, branch)
+            repo_base_image_path, commit_message, image_data, branch)
 
         commits.append(response['commit'].sha)
 
