@@ -110,7 +110,7 @@ def add_new_base_images_to_the_repo(repository, repo_dir, repo_token, base_image
     return commits
 
 
-def get_previous_file_sha(remote_repo, file_path, branch):
+def get_file_sha(remote_repo, file_path, branch):
     # GitHub API does not allow to download files bigger than 1MB and there is not any API endpoint to get the current sha of a file.
     # The simplest solution is to get the sha from a get_contents endpoint using a directory. The endpoint returns the sha of the file.
     # for every file in the direectory.
@@ -148,7 +148,7 @@ def update_base_images_in_the_repo(local_repo, repository, repo_dir, repo_token,
         image_data = open(file_path, "rb").read()
 
         # Previous sha for the file
-        sha = get_previous_file_sha(remote_repo, base_image_path, branch)
+        sha = get_file_sha(remote_repo, base_image_path, branch)
 
         # Debug info
         print("Auto-commit to update image: ")
@@ -187,7 +187,7 @@ def delete_base_images_from_the_repo(local_repo, repository, repo_dir, repo_toke
         print(f'Deleting file {file_path}')
 
         # Previous sha for the file
-        sha = get_previous_file_sha(remote_repo, base_image_path, branch)
+        sha = get_file_sha(remote_repo, base_image_path, branch)
 
         # Debug info
         print("Auto-commit to delete image: ")
