@@ -128,7 +128,7 @@ def add_new_base_images_to_the_repo(local_repo, repository, repo_dir, repo_token
         # File content
         image_data = open(file_path, "rb").read()
 
-        enable_console_debug_logging()
+        # enable_console_debug_logging()
 
         response = remote_repo.create_file(
             repo_base_image_path, commit_message, image_data, branch)
