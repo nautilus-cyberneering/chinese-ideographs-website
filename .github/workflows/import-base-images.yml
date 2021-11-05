@@ -1,0 +1,112 @@
+name: Import Base images from remote media library
+
+on:
+  schedule:
+    - cron:  '0 * * * *'
+  push:
+    branches: [ main, issue-* ]
+
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:  
+          submodules: 'true'
+
+      - name: Debug env vars
+        shell: bash
+        run: |
+          echo -e "GITHUB_REPOSITORY: $GITHUB_REPOSITORY\n"
+          echo -e "GITHUB_WORKSPACE: $GITHUB_WORKSPACE\n"
+          echo -e "GITHUB_SHA: $GITHUB_SHA\n"
+          echo -e "GITHUB_REF: $GITHUB_REF\n"
+          echo -e "GITHUB_HEAD_REF: $GITHUB_HEAD_REF\n"
+          echo -e "GITHUB_BASE_REF: $GITHUB_BASE_REF\n"
+          echo -e "GITHUB_EVENT_NAME: $GITHUB_EVENT_NAME\n"
+          echo -e "GITHUB_EVENT_PATH: $GITHUB_EVENT_PATH\n"
+
+      - name: Setup DVC
+        uses: iterative/setup-dvc@v1
+
+      - name: Update library submodule
+        id: update-library
+        run: |
+          git submodule status
+          echo "::set-output name=previous_ref::$(git submodule status | awk '{print $1}' | sed 's/-//' | sed 's/+//' | sed 's/U//')"
+          git submodule update --remote
+          echo "::set-output name=current_ref::$(git submodule status | awk '{print $1}' | sed 's/-//' | sed 's/+//' | sed 's/U//')"
+
+      - name: Dvc diff for library
+        id: library-dvc-diff
+        run: ./scripts/library-dvc-diff.sh
+        env:
+          DVC_REPO_DIR: "library"
+          PREVIOUS_REF: ${{ steps.update-library.outputs.previous_ref }}
+          CURRENT_REF: ${{ steps.update-library.outputs.current_ref }}
+
+      - name: Debug update submodule
+        run: |
+          echo "Output var 'previous_ref': ${{ steps.update-library.outputs.previous_ref }}"
+          echo "Output var 'current_ref': ${{ steps.update-library.outputs.current_ref }}"
+          echo "Output var 'dvc-diff': ${{ steps.library-dvc-diff.outputs.dvc-diff }}"
+
+      - name: Pull dataset from remote
+        run: cd library && dvc pull --remote azure && cd ..
+        env:
+          AZURE_STORAGE_ACCOUNT: ${{ secrets.AZURE_STORAGE_ACCOUNT }}
+          AZURE_STORAGE_SAS_TOKEN: ${{ secrets.AZURE_STORAGE_SAS_TOKEN }}
+
+      - name: Sync images from media library (git submodule) to this repo
+        run: ./scripts/sync-base-images.sh
+
+      - name: Show added or modified Base Images
+        run:  |
+          git status
+          git --no-pager diff
+
+      - name: Auto-commit added or modified images
+        id: auto-commit
+        uses: ./.github/actions/auto-commit-images
+        with:
+          repository: "${{ github.repository }}"
+          repo_dir: "${{ github.workspace }}"
+          repo_token: "${{ secrets.GITHUB_TOKEN }}"
+          branch: "${{ github.ref }}"
+
+      - name: Commit submodule udpate
+        if: ${{ steps.update-library.outputs.previous_ref != steps.update-library.outputs.current_ref }}
+        run: |
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          # git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}
+          # Remove untracked images (commited with GitHub API)
+          git clean -f
+          # Sync branch. Pull new images commited with GitHub API
+          git pull
+          # Commit submodule (library) update
+          git add library && git commit -m "Auto update library submodule:  ${{ steps.update-library.outputs.current_ref }}" && git push || echo "No changes to commit"
+
+      - name: Archive images
+        uses: actions/upload-artifact@v2
+        if: ${{ !env.ACT }}
+        with:
+          name: public-images
+          path: public/images
+
+      - name: Debug auto-commit ouput
+        run: |
+          echo "Output var 'changes_detected': ${{ steps.auto-commit.outputs.changes_detected }}"          
+
+      - name: Build if Base images have been added
+        if: ${{ steps.auto-commit.outputs.changes_detected == 'true' }}
+        run: |
+          npm install
+          npm run build
+
+      - name: Deploy if Base images have been added
+        if: ${{ steps.auto-commit.outputs.changes_detected == 'true' }}
+        uses: JamesIves/github-pages-deploy-action@4.1.5
+        with:
+          branch: gh-pages
+          folder: public

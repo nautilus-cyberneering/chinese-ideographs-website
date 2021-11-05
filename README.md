@@ -7,7 +7,7 @@ You can see this live page here: https://Nautilus-Cyberneering.github.io/chinese
 ## Get started
 
 ```
-git clone git@github.com:Nautilus-Cyberneering/chinese-ideographs-website.git
+git clone --recurse-submodules --remote-submodules git@github.com:Nautilus-Cyberneering/chinese-ideographs-website.git
 ```
 
 Install the dependencies ...
@@ -38,3 +38,10 @@ npm run build
 ```
 
 You can run the newly built app with `npm run start`. This uses [sirv](https://github.com/lukeed/sirv), which is included in your package.json's `dependencies` so that the app will work when you deploy to platforms like [Heroku](https://heroku.com).
+
+## Development
+
+Use `act` to import Base images:
+```
+act -j import
+```
