@@ -23,7 +23,6 @@ def main():
         print("Converting ", filename, "to", format,
               "as", output_filename)
         change_image_file_format(filename, output_filename)
- 
 
     files_paths = get_files_paths(
         os.environ["INPUT_IMAGES_PATH"])
