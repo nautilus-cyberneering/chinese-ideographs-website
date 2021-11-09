@@ -61,7 +61,7 @@ jobs:
         run: ./scripts/sync-base-images.sh
 
       - name: Resize synched imaged
-        uses: actions/resize-image
+        uses: ./.github/actions/resize-image
         with:
           images_path: public/images
           width: 512
