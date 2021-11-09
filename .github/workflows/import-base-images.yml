@@ -5,6 +5,10 @@ on:
     - cron:  '0 * * * *'
   push:
     branches: [ main, issue-* ]
+  workflow_dispatch:
+    inputs:
+      library_sha:
+        description: 'The library commit sha that triggered the workflow'
 
 jobs:
   import:
