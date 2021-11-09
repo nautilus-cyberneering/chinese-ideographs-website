@@ -1,0 +1,17 @@
+name: "Modify Image File Format"
+description: "Modify the file format of a image using Libvips"
+author: "Nautilus Cyberneering GmbH"
+inputs:
+  images_path:
+    description: "Path to the TIFF files to change its file format"
+    required: true
+  format:
+    description: "File format for destination images (i.e. 'jpg' ). Will be also used as extension."
+    required: true
+outputs:
+  result:
+    description: "The modified input structure"
+runs:
+  using: "docker"
+  image: "Dockerfile"
+
