@@ -60,6 +60,13 @@ jobs:
       - name: Sync images from media library (git submodule) to this repo
         run: ./scripts/sync-base-images.sh
 
+      - name: Resize synched imaged
+        uses: ./.github/actions/resize-image
+        with:
+          images_path: public/images
+          width: 512
+          height: 512
+
       - name: Show added or modified Base Images
         run:  |
           git status
