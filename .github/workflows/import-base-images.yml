@@ -5,6 +5,10 @@ on:
     - cron:  '0 * * * *'
   push:
     branches: [ main, issue-* ]
+  workflow_dispatch:
+    inputs:
+      library_sha:
+        description: 'The library commit sha that triggered the workflow'
 
 jobs:
   import:
@@ -66,6 +70,12 @@ jobs:
           images_path: public/images
           width: 512
           height: 512
+
+      - name: Change file format of synched images
+        uses: ./.github/actions/change-image-file-format
+        with:
+          images_path: public/images
+          format: jpg
 
       - name: Remove unneeded base images
         run: ./scripts/sync-base-images.sh remove_base
