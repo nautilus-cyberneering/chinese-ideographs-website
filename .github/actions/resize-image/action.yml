@@ -1,0 +1,17 @@
+name: "Resize image"
+description: "Resize a image collection using Libvips, with Lanczos kernel algorithm"
+author: "Nautilus Cyberneering GmbH"
+inputs:
+  images_path:
+    description: "Path to the TIFF files to resize"
+    required: true
+  width:
+    description: "Maximum destination image width"
+    required: true
+  height:
+    description: "Maximum destination image height"
+    required: true
+runs:
+  using: "docker"
+  image: "Dockerfile"
+
