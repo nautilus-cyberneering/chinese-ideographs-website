@@ -77,6 +77,9 @@ jobs:
           images_path: public/images
           format: jpg
 
+      - name: Remove unneeded base images
+        run: ./scripts/sync-base-images.sh remove_base
+
       - name: Show added or modified Base Images
         run:  |
           git status
