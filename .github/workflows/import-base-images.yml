@@ -71,6 +71,12 @@ jobs:
           width: 512
           height: 512
 
+      - name: Change file format of synched images
+        uses: ./.github/actions/change-image-file-format
+        with:
+          images_path: public/images
+          format: jpg
+
       - name: Show added or modified Base Images
         run:  |
           git status
