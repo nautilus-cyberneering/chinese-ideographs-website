@@ -10,15 +10,6 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Setup DVC
-        uses: iterative/setup-dvc@v1
-
-      - name: Pull dataset from remote
-        run: dvc pull --remote azure
-        env:
-          AZURE_STORAGE_ACCOUNT: ${{ secrets.AZURE_STORAGE_ACCOUNT }}
-          AZURE_STORAGE_SAS_TOKEN: ${{ secrets.AZURE_STORAGE_SAS_TOKEN }}
-
       - name: Install and Build
         run: |
           npm install
