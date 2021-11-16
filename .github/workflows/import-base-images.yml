@@ -85,6 +85,13 @@ jobs:
           git status
           git --no-pager diff
 
+      - name: Archive images
+        uses: actions/upload-artifact@v2
+        if: ${{ !env.ACT }}
+        with:
+          name: public-images
+          path: public/images
+
       - name: Auto-commit added or modified images
         id: auto-commit
         uses: ./.github/actions/auto-commit-images
@@ -94,18 +101,9 @@ jobs:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
           branch: "${{ github.ref }}"
 
-      - name: Build website if Base images have been added
-        if: ${{ steps.auto-commit.outputs.changes_detected == 'true' }}
+      - name: Debug auto-commit ouput
         run: |
-          npm install
-          npm run build
-
-      - name: Deploy website if Base images have been added
-        if: ${{ steps.auto-commit.outputs.changes_detected == 'true' }}
-        uses: JamesIves/github-pages-deploy-action@4.1.5
-        with:
-          branch: gh-pages
-          folder: public
+          echo "Output var 'changes_detected': ${{ steps.auto-commit.outputs.changes_detected }}"
 
       - name: Commit submodule udpate
         if: ${{ steps.update-library.outputs.previous_ref != steps.update-library.outputs.current_ref }}
@@ -122,14 +120,15 @@ jobs:
           # Commit submodule (library) update
           git add library && git commit -m "Auto update library submodule:  ${{ steps.update-library.outputs.current_ref }}" && git push || echo "No changes to commit"
 
-      - name: Debug auto-commit ouput
+      - name: Build website if Base images have been added
+        if: ${{ steps.auto-commit.outputs.changes_detected == 'true' }}
         run: |
-          echo "Output var 'changes_detected': ${{ steps.auto-commit.outputs.changes_detected }}"
+          npm install
+          npm run build
 
-      - name: Archive images
-        uses: actions/upload-artifact@v2
-        if: ${{ !env.ACT }}
+      - name: Deploy website if Base images have been added
+        if: ${{ steps.auto-commit.outputs.changes_detected == 'true' }}
+        uses: JamesIves/github-pages-deploy-action@4.1.5
         with:
-          name: public-images
-          path: public/images
-
+          branch: gh-pages
+          folder: public
