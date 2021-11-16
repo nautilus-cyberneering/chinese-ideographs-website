@@ -11,7 +11,7 @@ on:
         description: 'The library commit sha that triggered the workflow'
 
 jobs:
-  import:
+  import-base-images:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
