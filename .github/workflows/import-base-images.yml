@@ -11,7 +11,7 @@ on:
         description: 'The library commit sha that triggered the workflow'
 
 jobs:
-  import:
+  import-base-images:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -94,18 +94,37 @@ jobs:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
           branch: "${{ github.ref }}"
 
+      - name: Build website if Base images have been added
+        if: ${{ steps.auto-commit.outputs.changes_detected == 'true' }}
+        run: |
+          npm install
+          npm run build
+
+      - name: Deploy website if Base images have been added
+        if: ${{ steps.auto-commit.outputs.changes_detected == 'true' }}
+        uses: JamesIves/github-pages-deploy-action@4.1.5
+        with:
+          branch: gh-pages
+          folder: public
+
       - name: Commit submodule udpate
         if: ${{ steps.update-library.outputs.previous_ref != steps.update-library.outputs.current_ref }}
         run: |
           git config --global user.name 'github-actions[bot]'
           git config --global user.email '41898282+github-actions[bot]@users.noreply.github.com'
           # git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}
-          # Remove untracked images (commited with GitHub API)
+          # Remove untracked images (commited with GitHub API when new images are added)
           git clean -f
-          # Sync branch. Pull new images commited with GitHub API
+          # Reset modified images (commited with GitHub API when images are modified)
+          git restore --source=HEAD --staged --worktree -- public/images
+          # Sync branch. Pull new and modified images commited with GitHub API (avoid merge conflict with pull)
           git pull
           # Commit submodule (library) update
           git add library && git commit -m "Auto update library submodule:  ${{ steps.update-library.outputs.current_ref }}" && git push || echo "No changes to commit"
+
+      - name: Debug auto-commit ouput
+        run: |
+          echo "Output var 'changes_detected': ${{ steps.auto-commit.outputs.changes_detected }}"
 
       - name: Archive images
         uses: actions/upload-artifact@v2
@@ -114,19 +133,3 @@ jobs:
           name: public-images
           path: public/images
 
-      - name: Debug auto-commit ouput
-        run: |
-          echo "Output var 'changes_detected': ${{ steps.auto-commit.outputs.changes_detected }}"          
-
-      - name: Build if Base images have been added
-        if: ${{ steps.auto-commit.outputs.changes_detected == 'true' }}
-        run: |
-          npm install
-          npm run build
-
-      - name: Deploy if Base images have been added
-        if: ${{ steps.auto-commit.outputs.changes_detected == 'true' }}
-        uses: JamesIves/github-pages-deploy-action@4.1.5
-        with:
-          branch: gh-pages
-          folder: public
