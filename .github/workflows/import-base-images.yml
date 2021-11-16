@@ -116,7 +116,7 @@ jobs:
           # Remove untracked images (commited with GitHub API when new images are added)
           git clean -f
           # Reset modified images (commited with GitHub API when images are modified)
-          git restore --source=HEAD --staged --worktree -- public/images
+          git restore --staged --worktree -- public/images
           # Sync branch. Pull new and modified images commited with GitHub API (avoid merge conflict with pull)
           git pull
           # Commit submodule (library) update
