@@ -51,7 +51,7 @@ jobs:
         if: ${{ steps.get-next-job.outputs.job_found == 'true' }}
         shell: bash
         run: |
-          PAYLOAD="${{ steps.get-next-job.outputs.job_payload }}" ./scripts/parse-payload.sh          
+          PAYLOAD="${{ steps.get-next-job.outputs.job_payload }}" ./scripts/parse-payload.sh
 
       - name: Build job started message payload
         id: build-start-payload
@@ -72,7 +72,7 @@ jobs:
         with:
           queue_name: "library-update"
           action: "start-job"
-          job_payload: ${{ steps.build-start-payload.outputs.payload }}          
+          job_payload: ${{ steps.build-start-payload.outputs.payload }}
 
         # Begin mutual exclusion job
 
@@ -104,7 +104,7 @@ jobs:
         env:
           DVC_REPO_DIR: "library"
           PREVIOUS_REF: ${{ steps.update-library.outputs.previous_ref }}
-          CURRENT_REF: ${{ steps.update-library.outputs.current_ref }}        
+          CURRENT_REF: ${{ steps.update-library.outputs.current_ref }}
 
       - name: Pull dataset from remote
         if: ${{ steps.get-next-job.outputs.job_found == 'true' }}
@@ -118,7 +118,7 @@ jobs:
         run: ./scripts/sync-base-images.sh
 
       - name: Resize synched imaged
-        if: ${{ steps.get-next-job.outputs.job_found == 'true' }}      
+        if: ${{ steps.get-next-job.outputs.job_found == 'true' }}
         uses: ./.github/actions/resize-image
         with:
           images_path: public/images
@@ -126,32 +126,31 @@ jobs:
           height: 512
 
       - name: Change file format of synched images
-        if: ${{ steps.get-next-job.outputs.job_found == 'true' }}      
+        if: ${{ steps.get-next-job.outputs.job_found == 'true' }}
         uses: ./.github/actions/change-image-file-format
         with:
           images_path: public/images
           format: jpg
 
       - name: Remove unneeded base images
-        if: ${{ steps.get-next-job.outputs.job_found == 'true' }}      
+        if: ${{ steps.get-next-job.outputs.job_found == 'true' }}
         run: ./scripts/sync-base-images.sh remove_base
 
       - name: Show added or modified Base Images
-        if: ${{ steps.get-next-job.outputs.job_found == 'true' }}      
-        run:  |
+        if: ${{ steps.get-next-job.outputs.job_found == 'true' }}
+        run: |
           git status
           git --no-pager diff
 
       - name: Archive images
-        if: ${{ steps.get-next-job.outputs.job_found == 'true' }}      
+        if: ${{ steps.get-next-job.outputs.job_found == 'true' && !env.ACT}}
         uses: actions/upload-artifact@v2
-        if: ${{ !env.ACT }}
         with:
           name: public-images
           path: public/images
 
       - name: Auto-commit added or modified images
-        if: ${{ steps.get-next-job.outputs.job_found == 'true' }}      
+        if: ${{ steps.get-next-job.outputs.job_found == 'true' }}
         id: auto-commit
         uses: ./.github/actions/auto-commit-images
         with:
@@ -161,7 +160,7 @@ jobs:
           branch: "${{ github.ref }}"
 
       - name: Debug auto-commit output
-        if: ${{ steps.get-next-job.outputs.job_found == 'true' }}      
+        if: ${{ steps.get-next-job.outputs.job_found == 'true' }}
         run: |
           echo "Output var 'changes_detected': ${{ steps.auto-commit.outputs.changes_detected }}"
 
@@ -200,7 +199,7 @@ jobs:
       - name: Show new commits
         if: ${{ steps.get-next-job.outputs.job_found == 'true' }}
         run: |
-          git log --pretty="fuller" --show-signature -5        
+          git log --pretty="fuller" --show-signature -5
 
       - name: Push
         id: push
@@ -221,4 +220,3 @@ jobs:
         with:
           branch: gh-pages
           folder: public
-
