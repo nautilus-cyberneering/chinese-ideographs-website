@@ -1,0 +1,107 @@
+name: Work allocator
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: "0,10,20,30,40,50 * * * *"
+  workflow_dispatch:
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Debug env vars
+        shell: bash
+        run: |
+          echo -e "GITHUB_REPOSITORY: $GITHUB_REPOSITORY\n"
+          echo -e "GITHUB_WORKSPACE: $GITHUB_WORKSPACE\n"
+          echo -e "GITHUB_SHA: $GITHUB_SHA\n"
+          echo -e "GITHUB_REF: $GITHUB_REF\n"
+          echo -e "GITHUB_HEAD_REF: $GITHUB_HEAD_REF\n"
+          echo -e "GITHUB_BASE_REF: $GITHUB_BASE_REF\n"
+          echo -e "GITHUB_EVENT_NAME: $GITHUB_EVENT_NAME\n"
+          echo -e "GITHUB_EVENT_PATH: $GITHUB_EVENT_PATH\n"
+
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+          submodules: "true"
+
+      #- name: Import GPG key
+      #  id: import-gpg
+      #  uses: crazy-max/ghaction-import-gpg@v4
+      #  with:
+      #    gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
+      #    passphrase: ${{ secrets.PASSPHRASE }}
+      #    git_config_global: true
+      #    git_user_signingkey: true
+      #    git_commit_gpgsign: true
+      #    fingerprint: "76BF41FD8C0589E1D5288B29E7279F2518CA55C6"
+
+      - name: Get next job
+        id: get-next-job
+        uses: Nautilus-Cyberneering/git-queue@v1-beta
+        with:
+          queue_name: "library-update"
+          action: "next-job"
+
+      - name: Update submodule to get new commit ref
+        id: update-submodule
+        if: ${{ steps.get-next-job.outputs.job_found == 'false' }}
+        shell: bash
+        run: |
+          git submodule status library
+          PREVIOUS_REF=$(git submodule status | awk '{print $1}' | sed 's/-//' | sed 's/+//' | sed 's/U//')
+          echo -e "::set-output name=previous_ref::$PREVIOUS_REF"
+          git submodule update --remote library
+          CURRENT_REF=$(git submodule status | awk '{print $1}' | sed 's/-//' | sed 's/+//' | sed 's/U//')
+          echo -e "::set-output name=current_ref::$CURRENT_REF"
+          UPDATED=$(if [ "$PREVIOUS_REF" != "$CURRENT_REF" ]; then echo "true"; else echo "false"; fi)
+          echo -e "::set-output name=updated::$UPDATED"
+
+      - name: Build job message payload
+        id: build-payload
+        if: ${{ steps.get-next-job.outputs.job_found == 'false' && steps.update-submodule.outputs.updated == 'true' }}
+        shell: bash
+        run: |
+          PAYLOAD="Update Library Submodule and Process Changes:
+          https://github.com/josecelano/library-aaa/commit/${{ steps.update-submodule.outputs.previous_ref }}
+          ->
+          https://github.com/josecelano/library-aaa/commit/${{ steps.update-submodule.outputs.current_ref }}
+          
+          PREVIOUS_REF=${{ steps.update-submodule.outputs.previous_ref }}
+          CURRENT_REF=${{ steps.update-submodule.outputs.current_ref }}"
+          PAYLOAD="${PAYLOAD//'%'/'%25'}"
+          PAYLOAD="${PAYLOAD//$'\n'/'%0A'}"
+          PAYLOAD="${PAYLOAD//$'\r'/'%0D'}"
+          echo "::set-output name=payload::$(echo "$PAYLOAD")"
+
+      - name: Debug step outputs
+        if: ${{ steps.get-next-job.outputs.job_found == 'false' && steps.update-submodule.outputs.updated == 'true' }}
+        run: |
+          echo -e "previous_ref: ${{ steps.update-submodule.outputs.previous_ref }}"
+          echo -e "current_ref: ${{ steps.update-submodule.outputs.current_ref }}"
+          echo -e "updated: ${{ steps.update-submodule.outputs.updated }}"
+          echo -e "payload:\n${{ steps.build-payload.outputs.payload }}"
+
+      - name: Create new job
+        id: create-job
+        if: ${{ steps.get-next-job.outputs.job_found == 'false' && steps.update-submodule.outputs.updated == 'true' }}
+        uses: Nautilus-Cyberneering/git-queue@v1-beta
+        with:
+          queue_name: "library-update"
+          action: "create-job"
+          job_payload: "${{ steps.build-payload.outputs.payload }}"
+
+      - name: Show new git-queue commit
+        if: ${{ steps.get-next-job.outputs.job_found == 'false' && steps.update-submodule.outputs.updated == 'true' && steps.create-job.outputs.job_created == 'true' }}
+        run: |
+          git show --show-signature ${{ steps.create-job.outputs.job_commit }}
+
+      - name: Push new job to the queue
+        id: push-job
+        if: ${{ steps.get-next-job.outputs.job_found == 'false' && steps.update-submodule.outputs.updated == 'true' && steps.create-job.outputs.job_created == 'true' }}
+        shell: bash
+        run: |
+          git push
