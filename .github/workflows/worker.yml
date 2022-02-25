@@ -96,7 +96,7 @@ jobs:
         shell: bash
         run: |
           git add library
-          git commit -m "update library aaa to commit ${{ steps.parse-payload.outputs.current_ref }}"
+          git commit -m "update library to commit ${{ steps.parse-payload.outputs.current_ref }}"
 
       - name: Setup DVC
         if: ${{ steps.get-next-job.outputs.job_found == 'true' }}
@@ -154,15 +154,13 @@ jobs:
           name: public-images
           path: public/images
 
-      - name: Auto-commit added or modified images
+        # TODO: one commits per image
+      - name: Apply all changes with a single commit
         if: ${{ steps.get-next-job.outputs.job_found == 'true' }}
-        id: auto-commit
-        uses: ./.github/actions/auto-commit-images
-        with:
-          repository: "${{ github.repository }}"
-          repo_dir: "${{ github.workspace }}"
-          repo_token: "${{ secrets.GITHUB_TOKEN }}"
-          branch: "${{ github.ref }}"
+        run: |
+          git add public/images
+          # commit only if there are changes
+          git diff-index --quiet HEAD || git commit -m "library synced to commit ${{ steps.parse-payload.outputs.current_ref }}"
 
       - name: Debug auto-commit output
         if: ${{ steps.get-next-job.outputs.job_found == 'true' }}
