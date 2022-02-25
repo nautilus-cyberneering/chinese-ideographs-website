@@ -1,5 +1,7 @@
 # Chinese Ideographs Website
 
+[![Work allocator](https://github.com/Nautilus-Cyberneering/chinese-ideographs-website/actions/workflows/work-allocator.yml/badge.svg)](https://github.com/Nautilus-Cyberneering/chinese-ideographs-website/actions/workflows/work-allocator.yml) [![Worker](https://github.com/Nautilus-Cyberneering/chinese-ideographs-website/actions/workflows/worker.yml/badge.svg)](https://github.com/Nautilus-Cyberneering/chinese-ideographs-website/actions/workflows/worker.yml) [![Deploy to GitHub Pages](https://github.com/Nautilus-Cyberneering/chinese-ideographs-website/actions/workflows/deploy.yml/badge.svg)](https://github.com/Nautilus-Cyberneering/chinese-ideographs-website/actions/workflows/deploy.yml)
+
 This website shows images processed by this repository: https://github.com/Nautilus-Cyberneering/chinese-ideographs
 
 You can see this live page here: https://Nautilus-Cyberneering.github.io/chinese-ideographs-website
