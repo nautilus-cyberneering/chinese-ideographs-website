@@ -108,8 +108,8 @@ jobs:
         run: ./scripts/library-dvc-diff.sh
         env:
           DVC_REPO_DIR: "library"
-          PREVIOUS_REF: ${{ steps.update-library.outputs.previous_ref }}
-          CURRENT_REF: ${{ steps.update-library.outputs.current_ref }}
+          PREVIOUS_REF: ${{ steps.parse-payload.outputs.previous_ref }}
+          CURRENT_REF: ${{ steps.parse-payload.outputs.current_ref }}
 
       - name: Pull dataset from remote
         if: ${{ steps.get-next-job.outputs.job_found == 'true' }}
