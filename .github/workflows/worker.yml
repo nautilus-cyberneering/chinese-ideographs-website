@@ -30,7 +30,7 @@ jobs:
 
       - name: Import GPG key
         id: import-gpg
-        uses: crazy-max/ghaction-import-gpg@v4
+        uses: crazy-max/ghaction-import-gpg@baa427b5b44047bccaea7f847cb94252ace52c90
         with:
           gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
           passphrase: ${{ secrets.PASSPHRASE }}
@@ -41,7 +41,7 @@ jobs:
 
       - name: Get next job
         id: get-next-job
-        uses: crazy-max/ghaction-import-gpg@v4
+        uses: crazy-max/ghaction-import-gpg@baa427b5b44047bccaea7f847cb94252ace52c90
         with:
           queue_name: "library-update"
           action: "next-job"
@@ -68,7 +68,7 @@ jobs:
       - name: Mark job as started
         id: start-job
         if: ${{ steps.get-next-job.outputs.job_found == 'true' }}
-        uses: crazy-max/ghaction-import-gpg@v4
+        uses: crazy-max/ghaction-import-gpg@baa427b5b44047bccaea7f847cb94252ace52c90
         with:
           queue_name: "library-update"
           action: "start-job"
@@ -179,7 +179,7 @@ jobs:
       - name: Mark job as finished
         id: finish-job
         if: ${{ steps.start-job.outputs.job_started == 'true' }}
-        uses: crazy-max/ghaction-import-gpg@v4
+        uses: crazy-max/ghaction-import-gpg@baa427b5b44047bccaea7f847cb94252ace52c90
         with:
           queue_name: "library-update"
           action: "finish-job"
