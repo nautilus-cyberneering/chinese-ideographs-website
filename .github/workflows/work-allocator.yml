@@ -41,7 +41,7 @@ jobs:
 
       - name: Get next job
         id: get-next-job
-        uses: crazy-max/ghaction-import-gpg@baa427b5b44047bccaea7f847cb94252ace52c90
+        uses: get-next-job
         with:
           queue_name: "library-update"
           action: "next-job"
@@ -88,7 +88,7 @@ jobs:
       - name: Create new job
         id: create-job
         if: ${{ steps.get-next-job.outputs.job_found == 'false' && steps.update-submodule.outputs.updated == 'true' }}
-        uses: crazy-max/ghaction-import-gpg@baa427b5b44047bccaea7f847cb94252ace52c90
+        uses: Nautilus-Cyberneering/git-queue@v1-beta
         with:
           queue_name: "library-update"
           action: "create-job"
