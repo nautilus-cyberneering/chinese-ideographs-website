@@ -30,7 +30,7 @@ jobs:
 
       - name: Import GPG key
         id: import-gpg
-        uses: Nautilus-Cyberneering/ghaction-import-gpg@set-passphrase-only-for-one-subkey
+        uses: crazy-max/ghaction-import-gpg@v4
         with:
           gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
           passphrase: ${{ secrets.PASSPHRASE }}
@@ -41,7 +41,7 @@ jobs:
 
       - name: Get next job
         id: get-next-job
-        uses: Nautilus-Cyberneering/git-queue@v1-beta
+        uses: crazy-max/ghaction-import-gpg@v4
         with:
           queue_name: "library-update"
           action: "next-job"
@@ -88,7 +88,7 @@ jobs:
       - name: Create new job
         id: create-job
         if: ${{ steps.get-next-job.outputs.job_found == 'false' && steps.update-submodule.outputs.updated == 'true' }}
-        uses: Nautilus-Cyberneering/git-queue@v1-beta
+        uses: crazy-max/ghaction-import-gpg@v4
         with:
           queue_name: "library-update"
           action: "create-job"
