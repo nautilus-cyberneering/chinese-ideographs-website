@@ -41,7 +41,7 @@ jobs:
 
       - name: Get next job
         id: get-next-job
-        uses: get-next-job
+        uses: Nautilus-Cyberneering/git-queue@v1-beta
         with:
           queue_name: "library-update"
           action: "next-job"
