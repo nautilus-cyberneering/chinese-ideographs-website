@@ -151,16 +151,17 @@ jobs:
 
         # TODO: one commits per image
       - name: Apply all changes with a single commit
+        id: auto-commit
         if: ${{ steps.get-next-job.outputs.job_found == 'true' }}
         run: |
           git add public/images
           # commit only if there are changes
-          git diff-index --quiet HEAD || git commit -m "library synced to commit ${{ steps.parse-payload.outputs.current_ref }}"
+          git diff-index --quiet HEAD || git commit -m "library synced to commit ${{ steps.parse-payload.outputs.current_ref }}" && echo "::set-output name=changes_detected::true"
 
       - name: Debug auto-commit output
         if: ${{ steps.get-next-job.outputs.job_found == 'true' }}
         run: |
-          echo "Output var 'changes_detected': ${{ steps.auto-commit.outputs.changes_detected }}"
+          echo "Output var 'changes_detected': ${{ steps.auto-commit.outputs.changes_detected == 'true' }}"
 
         # End mutual exclusion job
 
