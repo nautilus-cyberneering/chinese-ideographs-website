@@ -10,26 +10,26 @@
 if [[ ($1 == "") || ($1 == "show_website")]]
 then
     echo "Current Base images in website ..."
-    find ./public/images -type f \( -iname '*42.*.jpg' -o -iname '*42.*.jpeg' \)
+    find ./public/images -type f \( -iname '*-42.*.jpg' -o -iname '*42.*.jpeg' \)
 fi
 
 # Find Base images
 if [[ ($1 == "") || ($1 == "show_library")]]
 then
     echo "Find Base images in library ..."
-    find ./library/data -type f \( -iname '*42*.tif' -o -iname '42*.tiff' \)
+    find ./library/data -type f \( -iname '*-42.*.tif' -o -iname '-42.*.tiff' \)
 fi
 
 # Remove all Base images from public folder
 if [[ ($1 == "") || ($1 == "remove_base")]]
 then
     echo "Removing Base images from public folder ..."
-    find ./public/images -type f \( -iname '*42*.tif' -o -iname '*42*.tiff' \) -exec rm -f {} \;
+    find ./public/images -type f \( -iname '*-42.*.tif' -o -iname '*-42.*.tiff' \) -exec rm -f {} \;
 fi
 
 # Copy all Base images from library to public folder
 if [[ ($1 == "") || ($1 == "copy")]]
 then
     echo "Copying Base images to public folder ..."
-    find ./library/data -type f \( -iname '*42*.tif' -o -iname '*42*.tiff' \) -exec cp -fv {} ./public/images \;
+    find ./library/data -type f \( -iname '*-42.*.tif' -o -iname '*-42.*.tiff' \) -exec cp -fv {} ./public/images \;
 fi
