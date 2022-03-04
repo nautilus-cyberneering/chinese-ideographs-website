@@ -45,7 +45,7 @@ jobs:
         with:
           queue_name: "library-update"
           action: "next-job"
-          git_commit_gpg_sign: "true"
+          git_commit_no_gpg_sign: "false"
 
       - name: Parse job payload
         id: parse-payload
@@ -74,7 +74,7 @@ jobs:
           queue_name: "library-update"
           action: "start-job"
           job_payload: ${{ steps.build-start-payload.outputs.payload }}
-          git_commit_gpg_sign: "true"
+          git_commit_no_gpg_sign: "false"
 
         # Begin mutual exclusion job
 
@@ -187,7 +187,7 @@ jobs:
           queue_name: "library-update"
           action: "finish-job"
           job_payload: ${{ steps.build-finish-payload.outputs.payload }}
-          git_commit_gpg_sign: "true"
+          git_commit_no_gpg_sign: "false"
 
       - name: Debug step outputs
         if: ${{ steps.get-next-job.outputs.job_found == 'true' }}
